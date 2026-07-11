@@ -34,6 +34,7 @@ describe('Settings', () => {
     expect(s.get('wins')).toBe(0);
     expect(s.get('enemyCount')).toBe(3);
     expect(s.get('enemyLives')).toBe(3);
+    expect(s.get('playerLives')).toBe(3);
   });
 
   it('persists and clamps enemy count and lives to their ranges', () => {
@@ -46,11 +47,12 @@ describe('Settings', () => {
 
     (globalThis as unknown as { localStorage: FakeStorage }).localStorage.setItem(
       'snowcraft.save.v1',
-      JSON.stringify({ enemyCount: 9, enemyLives: 0 }),
+      JSON.stringify({ enemyCount: 9, enemyLives: 0, playerLives: 9 }),
     );
     const c = new Settings();
     expect(c.get('enemyCount')).toBe(3); // clamped to max 3
     expect(c.get('enemyLives')).toBe(1); // clamped to min 1
+    expect(c.get('playerLives')).toBe(5); // clamped to max 5
   });
 
   it('defaults buffs to the player squad and rejects invalid values', () => {

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import type { EventBus } from '../core/EventBus';
 import type { GameRenderer } from '../core/Game';
 import type { AssetManager } from '../engine/AssetManager';
-import { PLAYER, SNOWBALL, TEAM_COLORS } from '../game/config';
+import { PLAYER, SNOWBALL, TEAM_COLORS, BUFF_COLORS } from '../game/config';
 import type { Player, Snowball } from '../game/types';
 import type { World } from '../game/World';
 import { toThree } from './coords';
@@ -92,6 +92,8 @@ export class ParticleRenderer implements GameRenderer {
   private readonly offSnowballImpact: () => void;
   private readonly offPlayerHit: () => void;
   private readonly offSnowballThrown: () => void;
+  private readonly offBuffPickedUp: () => void;
+  private readonly offPlayerRespawned: () => void;
 
   constructor(
     private readonly scene: THREE.Scene,
@@ -218,6 +220,15 @@ export class ParticleRenderer implements GameRenderer {
       toThree(this.tmp, snowball.position.x, snowball.position.y, snowball.height);
       this.spawnParticle(this.tmp.x, this.tmp.y, this.tmp.z, 0, 0.45, 0, 0.1, TRAIL_LIFE, color);
     });
+    this.offBuffPickedUp = events.on('BuffPickedUp', (event) => {
+      const color = BUFF_COLORS[event.buff];
+      this.spawnBurst(event.x, event.y, 0.7, color, 14);
+      this.spawnSnowPuff(event.x, event.y, 6);
+    });
+    this.offPlayerRespawned = events.on('PlayerRespawned', (event) => {
+      this.spawnBurst(event.x, event.y, 0.8, BUFF_COLORS.immunity, 16);
+      this.spawnSnowPuff(event.x, event.y, 9);
+    });
   }
 
   sync(alpha: number): void {
@@ -248,6 +259,8 @@ export class ParticleRenderer implements GameRenderer {
     this.offSnowballImpact();
     this.offPlayerHit();
     this.offSnowballThrown();
+    this.offBuffPickedUp();
+    this.offPlayerRespawned();
     this.scene.remove(this.group);
 
     for (const particle of this.particleSlots) {

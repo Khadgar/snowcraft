@@ -16,6 +16,7 @@ export interface GameEvents {
     y: number;
   };
   PlayerDefeated: { playerId: EntityId; team: Team };
+  PlayerRespawned: { playerId: EntityId; x: number; y: number };
   BuffPickedUp: { playerId: EntityId; buff: BuffType; x: number; y: number };
   UnitsSelected: { ids: readonly EntityId[] };
   RoundStarted: { seed: number };

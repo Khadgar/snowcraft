@@ -4,10 +4,11 @@ import type { World } from '../game/World';
 import { Team } from '../game/types';
 
 /**
- * Watches for the elimination win/loss condition (design §2) and emits a single
- * `RoundEnded` event when one squad is wiped out. The winner is the team with
- * survivors. Rendering/UI observe `RoundEnded` (or {@link result}) to show the
- * victory/defeat screen.
+ * Watches for the win/loss condition (design §2) and emits a single
+ * `RoundEnded` event. The player wins when the enemy squad is wiped out. Because
+ * the player hero respawns while it has lives, the player only *loses* once the
+ * hero is down AND out of lives. Rendering/UI observe `RoundEnded` (or
+ * {@link result}) to show the victory/defeat screen.
  */
 export class RoundSystem implements System {
   readonly name = 'round';
@@ -32,13 +33,23 @@ export class RoundSystem implements System {
     if (this.ended) return;
     const players = this.world.countLiving(Team.Player);
     const enemies = this.world.countLiving(Team.Enemy);
-    if (players > 0 && enemies > 0) return;
 
-    // A squad has been eliminated. Decide the winner (both empty is a draw that
-    // favors the player's survival check — player loss takes precedence only if
-    // the player squad is the one wiped out).
+    // The player wins the moment the enemy squad is eliminated.
+    if (enemies === 0) {
+      this.end(Team.Player);
+      return;
+    }
+
+    // The player only loses when the hero is down and has no lives left to
+    // respawn; while lives remain a downed hero is awaiting respawn.
+    if (players === 0 && this.world.playerLives <= 0) {
+      this.end(Team.Enemy);
+    }
+  }
+
+  private end(winner: Team): void {
     this.ended = true;
-    this.winner = players > 0 ? Team.Player : Team.Enemy;
-    this.events.emit('RoundEnded', { winner: this.winner });
+    this.winner = winner;
+    this.events.emit('RoundEnded', { winner });
   }
 }

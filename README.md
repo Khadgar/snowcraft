@@ -1,9 +1,10 @@
 # SnowCraft
 
-A faithful browser remake of the 1999 Flash game **SnowCraft** — command a squad
-of three children in a fast, cartoony snowball fight against an AI team. Built
-with **Three.js + TypeScript + Vite** using a data-oriented, ECS-inspired
-architecture where the simulation is fully decoupled from rendering.
+A faithful browser remake of the 1999 Flash game **SnowCraft** — command a lone
+snowball fighter (who respawns while you have lives left) in a fast, cartoony
+snowball fight against an AI squad. Built with **Three.js + TypeScript + Vite**
+using a data-oriented, ECS-inspired architecture where the simulation is fully
+decoupled from rendering.
 
 Built to the specification in [`design.md`](./design.md).
 
@@ -19,21 +20,21 @@ main menu, then click **Start Battle**.
 
 ## Controls
 
+Your fighter is always selected for you — no clicking or `Tab` needed.
+
 | Action | Input |
 | --- | --- |
-| Select a unit | Left-click one of your units |
-| Switch unit | `Tab` cycles through your squad |
-| Add to selection | `Shift` + left-click |
-| Box-select | Left-drag over open ground (with nothing selected, or `Shift`+drag) |
 | Move | `WASD`, or right-click a destination |
-| Aim & throw | With a unit selected, hold the left mouse over the battlefield to aim (power grows), release to throw. Aiming can't be cancelled or interrupted once started |
+| Aim & throw | Hold the left mouse over the battlefield to aim (power grows), release to throw. Aiming can't be cancelled or interrupted once started |
 | Pause | `Esc` or `P` |
 | Debug overlay | `` ` `` (backtick) to toggle, number keys `1`–`6` for categories |
 
-Set the number of **Opponents**, their **Lives** (hits to defeat), the **AI** skill,
-and **Buffs** (arena pickups: extra life, 5s immunity, speed boost — collectible by
-your squad, both teams, or off) on the main menu. Win by eliminating the entire
-enemy squad; lose if your squad is wiped out.
+Set **Your Lives** (respawns — when your fighter is eliminated it reappears at a
+random spot with 5s immunity while any remain), the number of **Opponents**,
+**Enemy Lives** (hits to defeat each enemy), the **AI** skill, and **Buffs**
+(arena pickups: extra life, 5s immunity, speed boost — collectible by you, both
+teams, or off) on the main menu. Win by eliminating the entire enemy squad; lose
+when you run out of lives.
 
 ## Scripts
 

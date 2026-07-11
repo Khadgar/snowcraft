@@ -27,7 +27,6 @@ export class HUD implements GameRenderer {
   private readonly selectedList: HTMLDivElement;
   private readonly hint: HTMLDivElement;
   private readonly debugLine: HTMLDivElement;
-  private readonly pausedBanner: HTMLDivElement;
   private readonly rows = new Map<number, HudRow>();
 
   constructor(container: HTMLElement, world: World, getStats: () => { fps: number; frameTimeMs: number }) {
@@ -55,16 +54,13 @@ export class HUD implements GameRenderer {
 
     const selectedPanel = this.createDiv('snowcraft-hud__selected-panel');
     const selectedTitle = this.createDiv('snowcraft-hud__panel-title');
-    selectedTitle.textContent = 'Selected Squad';
+    selectedTitle.textContent = 'Your Fighter';
     this.hint = this.createDiv('snowcraft-hud__hint');
-    this.hint.textContent = 'Click a unit to select • Tab to switch • WASD or right-click to move • Hold left mouse to aim & throw.';
+    this.hint.textContent = 'WASD or right-click to move • Hold left mouse to aim & throw.';
     this.selectedList = this.createDiv('snowcraft-hud__selected-list');
     selectedPanel.append(selectedTitle, this.hint, this.selectedList);
 
-    this.pausedBanner = this.createDiv('snowcraft-hud__paused');
-    this.pausedBanner.textContent = 'PAUSED';
-
-    this.root.append(topBar, selectedPanel, this.pausedBanner);
+    this.root.append(topBar, selectedPanel);
     container.append(this.root);
   }
 
@@ -73,7 +69,6 @@ export class HUD implements GameRenderer {
     this.updateTeamStatus();
     this.updateSelectedRows();
     this.updateDebugLine();
-    this.pausedBanner.hidden = !this.world.paused;
   }
 
   dispose(): void {
@@ -82,9 +77,8 @@ export class HUD implements GameRenderer {
   }
 
   private updateTeamStatus(): void {
-    const playerCount = this.world.countLiving(Team.Player);
     const enemyCount = this.world.countLiving(Team.Enemy);
-    this.playerTeamText.textContent = `You ${playerCount}`;
+    this.playerTeamText.textContent = `You  ♥ ${this.world.playerLives}`;
     this.playerTeamText.style.color = this.teamColor(Team.Player);
     this.enemyTeamText.textContent = `Enemy ${enemyCount}`;
     this.enemyTeamText.style.color = this.teamColor(Team.Enemy);
@@ -225,8 +219,7 @@ export class HUD implements GameRenderer {
 
 .snowcraft-hud__team-status,
 .snowcraft-hud__debug,
-.snowcraft-hud__selected-panel,
-.snowcraft-hud__paused {
+.snowcraft-hud__selected-panel {
   backdrop-filter: blur(8px);
   background: rgba(255, 255, 255, 0.82);
   border: 2px solid rgba(255, 255, 255, 0.9);
@@ -319,25 +312,12 @@ export class HUD implements GameRenderer {
   text-align: center;
 }
 
-.snowcraft-hud__paused {
-  color: #2e3e50;
-  font-size: clamp(36px, 8vw, 84px);
-  font-weight: 1000;
-  left: 50%;
-  letter-spacing: 0.12em;
-  padding: 18px 34px;
-  position: absolute;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-2deg);
-}
-
 .snowcraft-hud__buffs {
   color: #1f6f4c;
   font-size: 12px;
   font-weight: 900;
 }
 
-.snowcraft-hud__paused[hidden],
 .snowcraft-hud__hint[hidden],
 .snowcraft-hud__unit-row[hidden],
 .snowcraft-hud__buffs[hidden] {

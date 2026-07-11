@@ -19,6 +19,8 @@ export interface SaveData {
   enemyCount: number;
   /** Hits each enemy can take before being defeated (1–5). */
   enemyLives: number;
+  /** Lives the player starts with (respawns while any remain) (1–5). */
+  playerLives: number;
   /** Who can pick up arena buffs. */
   buffs: BuffTarget;
   wins: number;
@@ -31,6 +33,8 @@ const STORAGE_KEY = 'snowcraft.save.v1';
 export const ENEMY_COUNT_RANGE = { min: 1, max: 3 } as const;
 /** Allowed range for the enemy-lives menu option. */
 export const ENEMY_LIVES_RANGE = { min: 1, max: 5 } as const;
+/** Allowed range for the player-lives menu option. */
+export const PLAYER_LIVES_RANGE = { min: 1, max: 5 } as const;
 
 const DEFAULTS: SaveData = {
   muted: false,
@@ -39,6 +43,7 @@ const DEFAULTS: SaveData = {
   selectedMap: 'arena1.json',
   enemyCount: 3,
   enemyLives: 3,
+  playerLives: 3,
   buffs: 'player',
   wins: 0,
   losses: 0,
@@ -67,6 +72,7 @@ function coerce(raw: unknown): SaveData {
     selectedMap: typeof obj.selectedMap === 'string' ? obj.selectedMap : DEFAULTS.selectedMap,
     enemyCount: clampInt(obj.enemyCount, ENEMY_COUNT_RANGE.min, ENEMY_COUNT_RANGE.max, DEFAULTS.enemyCount),
     enemyLives: clampInt(obj.enemyLives, ENEMY_LIVES_RANGE.min, ENEMY_LIVES_RANGE.max, DEFAULTS.enemyLives),
+    playerLives: clampInt(obj.playerLives, PLAYER_LIVES_RANGE.min, PLAYER_LIVES_RANGE.max, DEFAULTS.playerLives),
     buffs: isBuffTarget(obj.buffs) ? obj.buffs : DEFAULTS.buffs,
     wins: typeof obj.wins === 'number' ? obj.wins : DEFAULTS.wins,
     losses: typeof obj.losses === 'number' ? obj.losses : DEFAULTS.losses,

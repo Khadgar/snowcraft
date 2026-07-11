@@ -1,4 +1,4 @@
-import type { ObstacleType } from './types';
+import type { BuffType, ObstacleType } from './types';
 
 /**
  * Central gameplay tuning constants (design §29 favors explicit, injectable
@@ -117,6 +117,14 @@ export const BUFF = {
   spawnInterval: 7,
 } as const;
 
+/** Player respawn tuning for the single-hero mode (design: respawn logic). */
+export const RESPAWN = {
+  /** Seconds of damage immunity granted on respawn. */
+  immunity: 5,
+  /** Delay after elimination before the unit reappears. */
+  delay: 1.0,
+} as const;
+
 export const AI = {
   /** How often (seconds) an AI unit re-evaluates its utility scores (design §15). */
   decisionInterval: 0.25,
@@ -130,6 +138,17 @@ export const AI = {
 export const TEAM_COLORS = {
   player: 0x3aa0ff,
   enemy: 0xff5a4d,
+} as const;
+
+/**
+ * Per-buff accent colors, shared by every renderer that draws pickups or buff
+ * feedback (pickup gems, ground rings, collect bursts). Single source of truth
+ * so the on-ground icon, the carry ring and the pickup pop always agree.
+ */
+export const BUFF_COLORS: Record<BuffType, number> = {
+  life: 0xff5a7a,
+  immunity: 0x4fd6ff,
+  speed: 0x7be36a,
 } as const;
 
 /**

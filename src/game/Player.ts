@@ -31,6 +31,30 @@ export function createPlayer(id: EntityId, team: Team, x: number, y: number): Pl
 }
 
 /**
+ * Resets an eliminated unit in place so it can respawn, preserving its id, team
+ * and max health. Bypasses the FSM (which treats `Defeated` as terminal) because
+ * respawning is a lifecycle reset, not a normal in-match transition.
+ */
+export function respawnPlayer(player: Player, x: number, y: number, immunity: number): void {
+  player.position.set(x, y);
+  player.velocity.set(0, 0);
+  player.rotation = player.team === Team.Player ? 0 : Math.PI;
+  player.health = player.maxHealth;
+  player.state = PlayerState.Idle;
+  player.currentAnimation = 'idle';
+  player.animationTime = 0;
+  player.moveTarget = null;
+  player.throwCooldown = 0;
+  player.throwCharge = 0;
+  player.aimDirection.set(1, 0);
+  player.stunTimer = 0;
+  player.throwTimer = 0;
+  player.alive = true;
+  player.immunityTimer = immunity;
+  player.speedTimer = 0;
+}
+
+/**
  * Explicit FSM transition table (design §10). A transition is only permitted
  * when the target state is listed for the current state. `Defeated` is
  * terminal.

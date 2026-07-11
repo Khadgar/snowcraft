@@ -19,6 +19,8 @@ import { ThrowSystem } from './systems/ThrowSystem';
 import { ProjectileSystem } from './systems/ProjectileSystem';
 import { CollisionSystem } from './systems/CollisionSystem';
 import { DamageSystem } from './systems/DamageSystem';
+import { RespawnSystem } from './systems/RespawnSystem';
+import { AutoSelectSystem } from './systems/AutoSelectSystem';
 import { RoundSystem } from './systems/RoundSystem';
 import { AnimationSystem } from './systems/AnimationSystem';
 import { HUD } from './ui/HUD';
@@ -34,6 +36,8 @@ const MAPS = [
   { label: 'Snowy Clearing', value: 'arena1.json' },
   { label: 'Frozen Pond', value: 'arena2.json' },
   { label: 'Village Skirmish', value: 'arena3.json' },
+  { label: 'Pine Forest', value: 'arena4.json' },
+  { label: 'Schoolyard Scramble', value: 'arena5.json' },
 ] as const;
 
 const DIFFICULTIES = [
@@ -44,6 +48,7 @@ const DIFFICULTIES = [
 
 const OPPONENT_OPTIONS = [1, 2, 3].map((n) => ({ label: String(n), value: String(n) }));
 const LIVES_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({ label: String(n), value: String(n) }));
+const PLAYER_LIVES_OPTIONS = [1, 2, 3, 4, 5].map((n) => ({ label: String(n), value: String(n) }));
 const BUFF_OPTIONS = [
   { label: 'Off', value: 'off' },
   { label: 'My squad', value: 'player' },
@@ -59,6 +64,8 @@ const game = new Game(container);
 await game.init(mapUrl, undefined, {
   maxEnemies: settings.get('enemyCount'),
   enemyMaxHealth: settings.get('enemyLives') * SNOWBALL.damage,
+  maxPlayers: 1,
+  playerLives: settings.get('playerLives'),
 });
 
 // Hold at the main menu (battlefield renders but the simulation is idle)
@@ -122,6 +129,12 @@ new Menus(container, game.events, {
     settings.set('enemyLives', Number(value));
     window.location.reload();
   },
+  playerLives: PLAYER_LIVES_OPTIONS,
+  selectedPlayerLives: String(settings.get('playerLives')),
+  onSelectPlayerLives: (value) => {
+    settings.set('playerLives', Number(value));
+    window.location.reload();
+  },
   buffOptions: BUFF_OPTIONS.map((b) => ({ label: b.label, value: b.value })),
   selectedBuffs: settings.get('buffs'),
   onSelectBuffs: (value) => {
@@ -132,7 +145,9 @@ new Menus(container, game.events, {
 });
 
 // --- Simulation systems, registered in the design §25 update order:
-//     AI -> Movement -> Throw -> Projectile -> Collision -> Damage -> Round -> Animation ---
+//     AutoSelect -> AI -> Movement -> Throw -> Projectile -> Collision -> Damage
+//     -> Respawn -> Round -> Animation ---
+const autoSelect = new AutoSelectSystem(game.world);
 const throwSystem = new ThrowSystem(game.world, game.events);
 const ai = new AISystem(game.world, game.events, throwSystem, settings.get('difficulty'));
 const movement = new MovementSystem(game.world);
@@ -140,8 +155,10 @@ const pickups = new PickupSystem(game.world, game.events, settings.get('buffs'))
 const projectile = new ProjectileSystem(game.world, game.events);
 const collision = new CollisionSystem(game.world, game.events);
 const damage = new DamageSystem(game.world, game.events);
+const respawn = new RespawnSystem(game.world, game.events);
 const round = new RoundSystem(game.world, game.events);
 const animation = new AnimationSystem(game.world, game.events);
+game.registerSystem(autoSelect);
 game.registerSystem(ai);
 game.registerSystem(movement);
 game.registerSystem(pickups);
@@ -149,6 +166,7 @@ game.registerSystem(throwSystem);
 game.registerSystem(projectile);
 game.registerSystem(collision);
 game.registerSystem(damage);
+game.registerSystem(respawn);
 game.registerSystem(round);
 game.registerSystem(animation);
 
@@ -165,7 +183,7 @@ const arenaRenderer = new ArenaRenderer(game.renderer.scene, game.assets, game.w
 const playerRenderer = new PlayerRenderer(game.renderer.scene, game.assets, game.world);
 const navIndicators = new NavIndicatorRenderer(game.renderer.scene, game.assets, game.world);
 const aimIndicators = new AimIndicatorRenderer(game.renderer.scene, game.assets, game.world);
-const pickupRenderer = new PickupRenderer(game.renderer.scene, game.assets, game.world);
+const pickupRenderer = new PickupRenderer(game.renderer.scene, game.assets, game.world, game.events);
 const particles = new ParticleRenderer(game.renderer.scene, game.assets, game.world, game.events);
 const hud = new HUD(container, game.world, () => game.loopStats);
 const debug = new DebugOverlay(game.renderer.scene, game.world, container, () => game.loopStats);

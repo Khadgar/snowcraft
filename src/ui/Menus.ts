@@ -25,6 +25,10 @@ export interface MenuActions {
   lives?: ReadonlyArray<{ label: string; value: string }>;
   selectedLives?: string;
   onSelectLives?(value: string): void;
+  /** Optional player-lives picker shown on the main menu. */
+  playerLives?: ReadonlyArray<{ label: string; value: string }>;
+  selectedPlayerLives?: string;
+  onSelectPlayerLives?(value: string): void;
   /** Optional buff-pickup picker shown on the main menu. */
   buffOptions?: ReadonlyArray<{ label: string; value: string }>;
   selectedBuffs?: string;
@@ -68,8 +72,8 @@ export class Menus {
     const mainTitle = document.createElement('h1');
     mainTitle.className = 'snowcraft-menus__title snowcraft-menus__title--main';
     mainTitle.textContent = 'SnowCraft';
-    const tagline = this.createParagraph('Command your squad in a cozy, chaotic snowball showdown.');
-    const controls = this.createParagraph('Select units, move as a team, charge throws, and outplay the rival squad.');
+    const tagline = this.createParagraph('Command your snowball fighter in a cozy, chaotic showdown.');
+    const controls = this.createParagraph('Move, dodge, charge throws, and outplay the rival squad — you respawn while you still have lives.');
     controls.className = 'snowcraft-menus__help';
     const startButton = this.createButton('Start Battle');
     startButton.addEventListener('click', () => {
@@ -150,7 +154,7 @@ export class Menus {
     this.resultMenu.title.textContent = playerWon ? 'Victory!' : 'Defeat';
     this.resultMenu.title.style.color = this.teamColor(playerWon ? Team.Player : Team.Enemy);
     this.resultMessage.textContent = playerWon
-      ? 'Your squad ruled the snowfield. Warm mittens all around!'
+      ? 'You ruled the snowfield. Warm mittens all around!'
       : 'The rival squad claimed this round. Dust off the snow and try again.';
     this.resultMenu.root.classList.toggle('snowcraft-menus__screen--victory', playerWon);
     this.resultMenu.root.classList.toggle('snowcraft-menus__screen--defeat', !playerWon);
@@ -209,9 +213,10 @@ export class Menus {
     const hasDifficulty = actions.difficulties !== undefined && actions.difficulties.length > 0;
     const hasOpponents = actions.opponents !== undefined && actions.opponents.length > 0;
     const hasLives = actions.lives !== undefined && actions.lives.length > 0;
+    const hasPlayerLives = actions.playerLives !== undefined && actions.playerLives.length > 0;
     const hasBuffs = actions.buffOptions !== undefined && actions.buffOptions.length > 0;
     const hasMute = actions.muted !== undefined;
-    if (!hasMaps && !hasDifficulty && !hasOpponents && !hasLives && !hasBuffs && !hasMute) return null;
+    if (!hasMaps && !hasDifficulty && !hasOpponents && !hasLives && !hasPlayerLives && !hasBuffs && !hasMute) return null;
 
     const row = this.createDiv('snowcraft-menus__options');
     if (hasMaps && actions.maps) {
@@ -224,13 +229,18 @@ export class Menus {
         actions.onSelectDifficulty?.(value),
       );
     }
+    if (hasPlayerLives && actions.playerLives) {
+      this.appendSelectField(row, 'Your Lives', actions.playerLives, actions.selectedPlayerLives, (value) =>
+        actions.onSelectPlayerLives?.(value),
+      );
+    }
     if (hasOpponents && actions.opponents) {
       this.appendSelectField(row, 'Opponents', actions.opponents, actions.selectedOpponents, (value) =>
         actions.onSelectOpponents?.(value),
       );
     }
     if (hasLives && actions.lives) {
-      this.appendSelectField(row, 'Lives', actions.lives, actions.selectedLives, (value) =>
+      this.appendSelectField(row, 'Enemy Lives', actions.lives, actions.selectedLives, (value) =>
         actions.onSelectLives?.(value),
       );
     }
@@ -317,7 +327,7 @@ export class Menus {
   display: flex;
   inset: 0;
   justify-content: center;
-  padding: 24px;
+  padding: 16px;
   pointer-events: none;
   position: absolute;
 }
@@ -347,10 +357,13 @@ export class Menus {
   backdrop-filter: blur(12px);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(232, 246, 255, 0.9));
   border: 3px solid rgba(255, 255, 255, 0.96);
-  border-radius: 30px;
+  border-radius: 24px;
   box-shadow: 0 24px 60px rgba(20, 44, 70, 0.32), inset 0 -8px 0 rgba(117, 176, 219, 0.12);
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   max-width: min(560px, 100%);
-  padding: clamp(28px, 5vw, 46px);
+  overflow-y: auto;
+  padding: clamp(18px, 3vw, 34px);
   pointer-events: auto;
   position: relative;
   text-align: center;
@@ -358,17 +371,19 @@ export class Menus {
 
 .snowcraft-menus__title {
   color: #2f5f91;
-  font-size: clamp(38px, 8vw, 78px);
+  font-size: clamp(30px, 7vmin, 60px);
   font-weight: 1000;
   letter-spacing: 0.02em;
   line-height: 0.95;
-  margin: 0 0 18px;
+  margin: 0 auto 12px;
+  text-align: center;
   text-shadow: 0 3px 0 #ffffff, 0 10px 22px rgba(55, 103, 143, 0.18);
 }
 
 .snowcraft-menus__title--main {
   color: ${this.teamColor(Team.Player)};
-  font-size: clamp(48px, 10vw, 92px);
+  font-size: clamp(36px, 8vmin, 66px);
+  letter-spacing: 0;
 }
 
 .snowcraft-menus__text {
@@ -376,7 +391,7 @@ export class Menus {
   font-size: clamp(17px, 2.5vw, 22px);
   font-weight: 750;
   line-height: 1.35;
-  margin: 0 auto 18px;
+  margin: 0 auto 12px;
   max-width: 440px;
 }
 
@@ -384,7 +399,7 @@ export class Menus {
   color: #607892;
   font-size: 15px;
   font-weight: 700;
-  margin-bottom: 26px;
+  margin-bottom: 16px;
 }
 
 .snowcraft-menus__actions {
@@ -429,9 +444,9 @@ export class Menus {
   align-items: center;
   display: flex;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
   justify-content: center;
-  margin-bottom: 22px;
+  margin-bottom: 16px;
 }
 
 .snowcraft-menus__field {
@@ -499,6 +514,33 @@ export class Menus {
   .snowcraft-menus__button--ghost {
     min-width: 0;
     width: 100%;
+  }
+}
+
+@media (max-height: 760px) {
+  .snowcraft-menus__help {
+    display: none;
+  }
+
+  .snowcraft-menus__panel {
+    padding: clamp(14px, 2.4vw, 26px);
+  }
+
+  .snowcraft-menus__title--main {
+    font-size: clamp(32px, 6.4vmin, 52px);
+  }
+
+  .snowcraft-menus__text {
+    margin: 0 auto 10px;
+  }
+
+  .snowcraft-menus__options {
+    margin-bottom: 12px;
+  }
+
+  .snowcraft-menus__scores {
+    margin-top: 16px;
+    padding-top: 12px;
   }
 }
 `;

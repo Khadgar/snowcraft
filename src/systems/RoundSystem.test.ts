@@ -41,12 +41,24 @@ describe('RoundSystem', () => {
     expect(round.result).toBe(Team.Player);
   });
 
-  it('declares the enemy the winner when the player squad is eliminated', () => {
+  it('declares the enemy the winner when the player is eliminated and out of lives', () => {
     const world = makeWorld();
+    world.playerLives = 0;
     world.addPlayer(Team.Player, -1, 0).alive = false;
     world.addPlayer(Team.Enemy, 1, 0);
     const round = new RoundSystem(world, new EventBus());
     round.update();
     expect(round.result).toBe(Team.Enemy);
+  });
+
+  it('does not end while the downed player still has lives to respawn', () => {
+    const world = makeWorld();
+    world.playerLives = 2;
+    world.addPlayer(Team.Player, -1, 0).alive = false;
+    world.addPlayer(Team.Enemy, 1, 0);
+    const round = new RoundSystem(world, new EventBus());
+    round.update();
+    expect(round.isOver).toBe(false);
+    expect(round.result).toBeNull();
   });
 });

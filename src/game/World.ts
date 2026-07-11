@@ -21,6 +21,10 @@ export class World {
   arena: Arena;
   time = 0;
   paused = false;
+  /** Lives the player has left (respawns while > 0); 0 means finally defeated. */
+  playerLives = 1;
+  /** Lives the player started the match with. */
+  playerLivesMax = 1;
 
   constructor(arena: Arena, seed = 0x1234abcd, ids: IdAllocator = new IdAllocator()) {
     this.arena = arena;

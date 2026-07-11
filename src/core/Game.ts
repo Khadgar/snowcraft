@@ -18,6 +18,10 @@ export interface SpawnOptions {
   maxEnemies?: number;
   /** Health assigned to each spawned enemy unit. */
   enemyMaxHealth?: number;
+  /** Maximum player units to spawn; extra player spawns are skipped. */
+  maxPlayers?: number;
+  /** Lives the player starts with (respawns while any remain). */
+  playerLives?: number;
 }
 
 /** Per-frame view updater. Renderers observe the world and sync meshes. */
@@ -67,6 +71,8 @@ export class Game {
     const ids = new IdAllocator();
     const arena = await new MapLoader(ids).load(mapUrl);
     this.world = new World(arena, seed, ids);
+    this.world.playerLivesMax = spawn.playerLives ?? 1;
+    this.world.playerLives = this.world.playerLivesMax;
     this.worldReady = true;
     this.spawnSquads(arena, spawn);
 
@@ -80,6 +86,7 @@ export class Game {
   /** Spawns both squads, applying difficulty overrides to the enemy team. */
   private spawnSquads(arena: Arena, spawn: SpawnOptions): void {
     let enemyCount = 0;
+    let playerCount = 0;
 
     for (const point of arena.spawns) {
       if (point.team === Team.Enemy) {
@@ -91,7 +98,12 @@ export class Game {
           enemy.health = spawn.enemyMaxHealth;
         }
       } else {
-        this.world.addPlayer(point.team, point.x, point.y);
+        if (spawn.maxPlayers !== undefined && playerCount >= spawn.maxPlayers) continue;
+        playerCount++;
+        const player = this.world.addPlayer(point.team, point.x, point.y);
+        // Single-hero control: the player unit is auto-selected from the start
+        // and kept selected by the AutoSelectSystem (no manual selection/TAB).
+        player.selected = true;
       }
     }
   }

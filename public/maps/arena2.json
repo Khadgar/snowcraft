@@ -1,0 +1,33 @@
+{
+  "name": "Frozen Pond",
+  "width": 44,
+  "height": 30,
+  "objects": [
+    { "type": "rock", "x": 0, "y": 0, "radius": 1.2 },
+    { "type": "rock", "x": -6, "y": -5 },
+    { "type": "rock", "x": 6, "y": 5 },
+    { "type": "rock", "x": -6, "y": 5 },
+    { "type": "rock", "x": 6, "y": -5 },
+    { "type": "tree", "x": -14, "y": -9 },
+    { "type": "tree", "x": 14, "y": 9 },
+    { "type": "tree", "x": -14, "y": 9 },
+    { "type": "tree", "x": 14, "y": -9 },
+    { "type": "tree", "x": 0, "y": 12 },
+    { "type": "tree", "x": 0, "y": -12 },
+    { "type": "fort", "x": -18, "y": 0, "width": 1.2, "height": 6 },
+    { "type": "fort", "x": 18, "y": 0, "width": 1.2, "height": 6 },
+    { "type": "fence", "x": -9, "y": 0, "width": 0.3, "height": 6 },
+    { "type": "fence", "x": 9, "y": 0, "width": 0.3, "height": 6 },
+    { "type": "prop", "x": -20, "y": -12 },
+    { "type": "prop", "x": 20, "y": 12 },
+    { "type": "prop", "x": 0, "y": 6 }
+  ],
+  "spawns": [
+    { "team": "player", "x": -20, "y": -7 },
+    { "team": "player", "x": -21, "y": 0 },
+    { "team": "player", "x": -20, "y": 7 },
+    { "team": "enemy", "x": 20, "y": -7 },
+    { "team": "enemy", "x": 21, "y": 0 },
+    { "team": "enemy", "x": 20, "y": 7 }
+  ]
+}

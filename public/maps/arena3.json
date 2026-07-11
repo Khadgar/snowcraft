@@ -1,0 +1,31 @@
+{
+  "name": "Village Skirmish",
+  "width": 46,
+  "height": 32,
+  "objects": [
+    { "type": "fort", "x": -8, "y": -8, "width": 4, "height": 4 },
+    { "type": "fort", "x": 8, "y": 8, "width": 4, "height": 4 },
+    { "type": "fort", "x": 8, "y": -8, "width": 3, "height": 3 },
+    { "type": "fort", "x": -8, "y": 8, "width": 3, "height": 3 },
+    { "type": "fence", "x": 0, "y": -4, "width": 8, "height": 0.3 },
+    { "type": "fence", "x": 0, "y": 4, "width": 8, "height": 0.3 },
+    { "type": "tree", "x": -16, "y": 0 },
+    { "type": "tree", "x": 16, "y": 0 },
+    { "type": "tree", "x": 0, "y": 13 },
+    { "type": "tree", "x": 0, "y": -13 },
+    { "type": "rock", "x": -3, "y": 0 },
+    { "type": "rock", "x": 3, "y": 0 },
+    { "type": "prop", "x": -20, "y": -13 },
+    { "type": "prop", "x": 20, "y": 13 },
+    { "type": "prop", "x": -20, "y": 13 },
+    { "type": "prop", "x": 20, "y": -13 }
+  ],
+  "spawns": [
+    { "team": "player", "x": -21, "y": -8 },
+    { "team": "player", "x": -22, "y": 0 },
+    { "team": "player", "x": -21, "y": 8 },
+    { "team": "enemy", "x": 21, "y": -8 },
+    { "team": "enemy", "x": 22, "y": 0 },
+    { "team": "enemy", "x": 21, "y": 8 }
+  ]
+}

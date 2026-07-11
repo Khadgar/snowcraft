@@ -61,6 +61,22 @@ npm run smoke:combat       # AI-driven throw → collision → damage
 Set `CHROME_PATH` to point at your Chrome/Edge binary if auto-detection fails,
 and `SMOKE_URL` to target a non-default dev URL.
 
+## Deployment
+
+The app is deployed to **GitHub Pages** at
+**https://khadgar.github.io/snowcraft/** by the
+[`Deploy to GitHub Pages`](./.github/workflows/deploy-pages.yml) workflow.
+
+- It runs automatically on every push to `main`, and can also be triggered
+  manually from the **Actions** tab (`Run workflow`).
+- The workflow runs `npm ci && npm run build` and publishes `dist/` — no
+  `gh-pages` branch is used. Vite's `base: './'` keeps all asset and map paths
+  relative, so the game works under the `/snowcraft/` project sub-path.
+
+**One-time setup:** in the repository, go to **Settings → Pages → Build and
+deployment** and set **Source** to **GitHub Actions**. This is required once for
+the deploy job to publish.
+
 ## Architecture
 
 One-way data flow (design §8, §25): **Simulation → Renderer → Three.js**. Game

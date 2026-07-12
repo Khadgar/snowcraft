@@ -28,7 +28,7 @@ export class ArenaRenderer {
   private buildGround(arena: Arena): void {
     const geo = new THREE.PlaneGeometry(arena.width, arena.height);
     geo.rotateX(-Math.PI / 2);
-    const mat = this.assets.standardMaterial(0xf4f9ff, false);
+    const mat = this.assets.standardMaterial(0xf9fcff, false);
     const ground = new THREE.Mesh(geo, mat);
     ground.receiveShadow = true;
     this.group.add(ground);

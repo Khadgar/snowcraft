@@ -25,6 +25,7 @@ import { AutoSelectSystem } from './systems/AutoSelectSystem';
 import { RoundSystem } from './systems/RoundSystem';
 import { AnimationSystem } from './systems/AnimationSystem';
 import { HUD } from './ui/HUD';
+import { Minimap } from './ui/Minimap';
 import { Menus } from './ui/Menus';
 import { DebugOverlay } from './ui/DebugOverlay';
 
@@ -235,6 +236,7 @@ const aimIndicators = new AimIndicatorRenderer(game.renderer.scene, game.assets,
 const pickupRenderer = new PickupRenderer(game.renderer.scene, game.assets, game.world, game.events);
 const particles = new ParticleRenderer(game.renderer.scene, game.assets, game.world, game.events);
 const hud = new HUD(container, game.world, () => game.loopStats, () => playing, () => showFps);
+const minimap = new Minimap(container, game.world, () => game.renderer.cameraController.getView(), () => playing);
 const debug = new DebugOverlay(game.renderer.scene, game.world, container, () => game.loopStats);
 game.addRenderer(playerRenderer);
 game.addRenderer(navIndicators);
@@ -242,8 +244,16 @@ game.addRenderer(aimIndicators);
 game.addRenderer(pickupRenderer);
 game.addRenderer(particles);
 game.addRenderer(hud);
+game.addRenderer(minimap);
 game.addRenderer(debug);
 game.addRenderer({ sync: () => {}, dispose: () => arenaRenderer.dispose() });
+
+// Follow-camera target: the local hero (blue/player team) while it's alive; the
+// camera holds/eases to centre while it is absent (respawning) or at the menu.
+game.renderer.setFollowTarget(() => {
+  const hero = game.world.players.find((p) => p.team === Team.Player && p.alive);
+  return hero ? { x: hero.position.x, y: hero.position.y } : null;
+});
 
 // Expose for debugging in the browser console.
 (window as unknown as { game: Game; THREE: typeof THREE }).game = game;

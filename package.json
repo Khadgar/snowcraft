@@ -18,6 +18,7 @@
     "smoke:combat": "node scripts/combat.mjs"
   },
   "dependencies": {
+    "preact": "^10.29.4",
     "three": "^0.185.1"
   },
   "devDependencies": {

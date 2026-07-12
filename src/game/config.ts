@@ -125,6 +125,26 @@ export const RESPAWN = {
   delay: 1.0,
 } as const;
 
+/**
+ * Run-scoring weights for clearing a level (design: competitive scoring). Higher
+ * difficulty, faster clears and fewer lives spent yield a higher score.
+ */
+export const SCORE = {
+  base: 1000,
+  /** Points added per enemy opponent in the match. */
+  perOpponent: 250,
+  /** Maximum time bonus (awarded at 0s), decaying with clear time. */
+  timeBonusMax: 1000,
+  /** Time bonus removed per second taken to clear. */
+  timeBonusDecayPerSecond: 10,
+  /** Points removed per life spent (death/respawn used). */
+  lifePenalty: 200,
+  /** Score multiplier per difficulty id. */
+  difficultyMultiplier: { easy: 1, normal: 1.5, hard: 2 } as Record<string, number>,
+  /** Minimum score awarded for any win. */
+  min: 100,
+} as const;
+
 export const AI = {
   /** How often (seconds) an AI unit re-evaluates its utility scores (design §15). */
   decisionInterval: 0.25,

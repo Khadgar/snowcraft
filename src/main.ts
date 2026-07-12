@@ -2,8 +2,9 @@ import './style.css';
 import * as THREE from 'three';
 import { Game } from './core/Game';
 import { AudioManager } from './engine/AudioManager';
-import { Settings, type AiDifficulty, type BuffTarget } from './engine/Settings';
+import { Settings, sanitizeName, PLAYER_NAME_MAX, type AiDifficulty, type BuffTarget } from './engine/Settings';
 import { SNOWBALL } from './game/config';
+import { computeScore } from './game/score';
 import { Team } from './game/types';
 import { ArenaRenderer } from './render/ArenaRenderer';
 import { PlayerRenderer } from './render/PlayerRenderer';
@@ -72,9 +73,13 @@ await game.init(mapUrl, undefined, {
 // until the player starts the battle.
 game.setRunning(false);
 
-// Persist the win/loss tally as matches conclude (design §28).
-game.events.on('RoundEnded', ({ winner }) => {
-  settings.recordResult(winner === Team.Player);
+// Whether the player is actively in a match (not at a menu / paused / finished).
+// Drives HUD visibility — the HUD only shows during live play.
+let playing = false;
+// Show the FPS/frame-time pill in the HUD (toggled live from the Options tab).
+let showFps = settings.get('showFps');
+game.events.on('GamePaused', ({ paused }) => {
+  playing = !paused;
 });
 
 // --- Audio (synthesized Web Audio; resumes on first user gesture) ---
@@ -93,9 +98,10 @@ const setPaused = (paused: boolean): void => {
 };
 
 // --- Menus (main / pause / victory / defeat) ---
-new Menus(container, game.events, {
+const menus = new Menus(container, game.events, {
   start: () => {
     game.setRunning(true);
+    playing = true;
     audio.resume();
   },
   togglePause: () => setPaused(!game.world.paused),
@@ -142,6 +148,49 @@ new Menus(container, game.events, {
     window.location.reload();
   },
   scores: { wins: settings.get('wins'), losses: settings.get('losses') },
+  leaderboard: settings.get('leaderboard'),
+  onClearLeaderboard: () => {
+    settings.clearLeaderboard();
+    window.location.reload();
+  },
+  playerName: settings.get('playerName'),
+  playerNameMax: PLAYER_NAME_MAX,
+  onSetName: (name) => {
+    settings.set('playerName', name);
+  },
+  showFps: settings.get('showFps'),
+  onToggleFps: (show) => {
+    showFps = show;
+    settings.set('showFps', show);
+  },
+});
+
+// On a finished match: persist the win/loss tally (design §28), and on a win
+// compute the run score (difficulty + clear time + lives spent), record it to
+// the local leaderboard, then show the result screen.
+game.events.on('RoundEnded', ({ winner }) => {
+  const won = winner === Team.Player;
+  playing = false;
+  settings.recordResult(won);
+
+  const timeSeconds = game.world.time;
+  const livesSpent = Math.max(0, game.world.playerLivesMax - game.world.playerLives);
+  const difficulty = settings.get('difficulty');
+  let score = 0;
+  let rank = -1;
+  if (won) {
+    score = computeScore({ difficulty, opponents: settings.get('enemyCount'), timeSeconds, livesSpent });
+    rank = settings.addScore({
+      name: sanitizeName(settings.get('playerName')),
+      score,
+      difficulty,
+      timeSeconds,
+      livesSpent,
+      map: selectedMap,
+      date: Date.now(),
+    });
+  }
+  menus.showResult({ won, score, rank, timeSeconds, livesSpent, difficulty });
 });
 
 // --- Simulation systems, registered in the design §25 update order:
@@ -185,7 +234,7 @@ const navIndicators = new NavIndicatorRenderer(game.renderer.scene, game.assets,
 const aimIndicators = new AimIndicatorRenderer(game.renderer.scene, game.assets, game.world);
 const pickupRenderer = new PickupRenderer(game.renderer.scene, game.assets, game.world, game.events);
 const particles = new ParticleRenderer(game.renderer.scene, game.assets, game.world, game.events);
-const hud = new HUD(container, game.world, () => game.loopStats);
+const hud = new HUD(container, game.world, () => game.loopStats, () => playing, () => showFps);
 const debug = new DebugOverlay(game.renderer.scene, game.world, container, () => game.loopStats);
 game.addRenderer(playerRenderer);
 game.addRenderer(navIndicators);

@@ -1,0 +1,126 @@
+.stats {
+  align-items: center;
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(28, 50, 74, 0.18);
+  color: #263343;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  gap: 4px;
+  left: 50%;
+  max-width: calc(100% - 24px);
+  min-width: 240px;
+  padding: 7px 14px;
+  position: absolute;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45);
+  top: 10px;
+  transform: translateX(-50%);
+}
+
+.meta {
+  align-items: center;
+  display: flex;
+  font-size: 14px;
+  font-weight: 900;
+  gap: 10px;
+}
+
+.sep {
+  color: #9bb0c4;
+}
+
+.time {
+  color: #3d566f;
+}
+
+.fighter {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.meter {
+  background: rgba(37, 56, 76, 0.16);
+  border-radius: 999px;
+  flex: 1 1 auto;
+  height: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.meterFill {
+  border-radius: inherit;
+  height: 100%;
+  transition: width 80ms linear, background-color 120ms linear;
+  width: 0;
+}
+
+.meterText {
+  color: #1d2b39;
+  font-size: 11px;
+  font-weight: 900;
+  inset: 0;
+  line-height: 16px;
+  position: absolute;
+  text-align: center;
+}
+
+.throw {
+  font-size: 12px;
+  font-weight: 900;
+  min-width: 82px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.buffs {
+  color: #1f6f4c;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.buffs[hidden] {
+  display: none;
+}
+
+.debug {
+  backdrop-filter: blur(8px);
+  background: rgba(255, 255, 255, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(28, 50, 74, 0.18);
+  color: #4f6278;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  position: absolute;
+  right: 14px;
+  top: 14px;
+}
+
+@media (max-width: 520px) {
+  .stats {
+    min-width: 0;
+    padding: 6px 10px;
+    top: 8px;
+  }
+
+  .meta {
+    font-size: 12px;
+    gap: 7px;
+  }
+
+  .throw {
+    min-width: 0;
+  }
+
+  .debug {
+    right: 8px;
+    top: 8px;
+  }
+}

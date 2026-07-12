@@ -3,8 +3,8 @@
 A faithful browser remake of the 1999 Flash game **SnowCraft** — command a lone
 snowball fighter (who respawns while you have lives left) in a fast, cartoony
 snowball fight against an AI squad. Built with **Three.js + TypeScript + Vite**
-using a data-oriented, ECS-inspired architecture where the simulation is fully
-decoupled from rendering.
+(with **Preact** for the DOM UI) using a data-oriented, ECS-inspired architecture
+where the simulation is fully decoupled from rendering.
 
 Built to the specification in [`design.md`](./design.md).
 
@@ -35,6 +35,12 @@ random spot with 5s immunity while any remain), the number of **Opponents**,
 (arena pickups: extra life, 5s immunity, speed boost — collectible by you, both
 teams, or off) on the main menu. Win by eliminating the entire enemy squad; lose
 when you run out of lives.
+
+The main menu is tabbed: **Options** (match setup), **How to Play** (a full rundown
+of the rules), and **Leaderboard** (local high scores saved in your browser).
+Clearing a level earns a **score** — higher difficulty, faster clears, and fewer
+lives spent all mean more points, shown on the victory screen and ranked on the
+leaderboard.
 
 ## Scripts
 
@@ -104,7 +110,7 @@ src/
   systems/   AI, movement, throwing, projectile, collision, damage, round, animation
   physics/   Collision primitives, spatial hash, line-of-sight, pathfinding
   render/    Arena/player/particle renderers
-  ui/        HUD, menus, debug overlay
+  ui/        HUD, menus, debug overlay (Preact + CSS modules)
   utils/     Vector2, math, RNG, object pool
 public/maps/ Arena definitions (JSON)
 ```

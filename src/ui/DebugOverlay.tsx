@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import { render, type JSX } from 'preact';
 import type { GameRenderer } from '../core/Game';
 import type { World } from '../game/World';
 import { toThree } from '../render/coords';
 import { hasLineOfSight } from '../physics/LineOfSight';
 import type { Shape } from '../physics/shapes';
 import { Team, type Player } from '../game/types';
+import styles from './DebugOverlay.module.css';
 
 interface DebugToggles {
   collision: boolean;
@@ -15,10 +17,46 @@ interface DebugToggles {
   projectiles: boolean;
 }
 
+/** Ordered toggle definitions, driving both the keybindings and the panel rows. */
+const TOGGLE_ROWS: ReadonlyArray<{ key: string; field: keyof DebugToggles; label: string }> = [
+  { key: '1', field: 'collision', label: 'collision' },
+  { key: '2', field: 'cover', label: 'cover' },
+  { key: '3', field: 'hitboxes', label: 'hitboxes' },
+  { key: '4', field: 'moveTargets', label: 'moveTargets' },
+  { key: '5', field: 'aiTargets', label: 'aiTargets' },
+  { key: '6', field: 'projectiles', label: 'projectiles' },
+];
+
+/** Live DOM nodes for the per-frame stat lines (written by {@link DebugOverlay.sync}). */
+interface PanelRefs {
+  fps: HTMLElement;
+  counts: HTMLElement;
+}
+
+/** Declarative debug panel: fixed title + per-frame stat lines (refs) + toggle rows. */
+function DebugPanel({ toggles, refs }: { toggles: DebugToggles; refs: PanelRefs }): JSX.Element {
+  return (
+    <div class={styles.panel}>
+      <div class={styles.title}>DEBUG (` to toggle)</div>
+      <div class={styles.line} ref={(el) => { if (el) refs.fps = el; }} />
+      <div class={styles.line} ref={(el) => { if (el) refs.counts = el; }} />
+      {TOGGLE_ROWS.map((row) => (
+        <div class={styles.toggle} key={row.field}>
+          [{row.key}] {row.label}{' '}
+          <span class={toggles[row.field] ? styles.on : styles.off}>
+            {toggles[row.field] ? 'on' : 'off'}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * Toggleable developer overlay (design §27): draws collision shapes, cover
  * volumes, hitboxes/selection radius, move-order lines, AI target lines and
- * projectile positions, plus a DOM panel with FPS/frame time and toggle state.
+ * projectile positions in the 3D scene, plus a DOM panel (Preact) with
+ * FPS/frame time and toggle state.
  *
  * Controls: backquote (`) toggles the overlay; number keys 1-6 toggle the
  * individual categories while it is active. Off by default (zero cost).
@@ -26,7 +64,8 @@ interface DebugToggles {
 export class DebugOverlay implements GameRenderer {
   private enabled = false;
   private readonly group = new THREE.Group();
-  private readonly panel: HTMLDivElement;
+  private readonly host: HTMLDivElement;
+  private readonly refs = {} as PanelRefs;
   private readonly tmpA = new THREE.Vector3();
   private readonly tmpB = new THREE.Vector3();
 
@@ -57,57 +96,31 @@ export class DebugOverlay implements GameRenderer {
     this.group.visible = false;
     scene.add(this.group);
 
-    this.panel = document.createElement('div');
-    this.panel.style.cssText = [
-      'position:absolute',
-      'left:12px',
-      'bottom:12px',
-      'padding:8px 10px',
-      'font:12px/1.5 ui-monospace,Consolas,monospace',
-      'color:#dff',
-      'background:rgba(10,16,32,0.82)',
-      'border:1px solid #2b4',
-      'border-radius:8px',
-      'pointer-events:none',
-      'white-space:pre',
-      'display:none',
-      'z-index:50',
-    ].join(';');
-    container.appendChild(this.panel);
+    this.host = document.createElement('div');
+    this.host.style.display = 'none';
+    container.appendChild(this.host);
+    this.renderPanel();
 
     window.addEventListener('keydown', this.onKeyDown);
+  }
+
+  private renderPanel(): void {
+    render(<DebugPanel toggles={this.toggles} refs={this.refs} />, this.host);
   }
 
   private readonly onKeyDown = (e: KeyboardEvent): void => {
     if (e.code === 'Backquote') {
       this.enabled = !this.enabled;
       this.group.visible = this.enabled;
-      this.panel.style.display = this.enabled ? 'block' : 'none';
+      this.host.style.display = this.enabled ? 'block' : 'none';
       return;
     }
     if (!this.enabled) return;
-    switch (e.code) {
-      case 'Digit1':
-        this.toggles.collision = !this.toggles.collision;
-        break;
-      case 'Digit2':
-        this.toggles.cover = !this.toggles.cover;
-        break;
-      case 'Digit3':
-        this.toggles.hitboxes = !this.toggles.hitboxes;
-        break;
-      case 'Digit4':
-        this.toggles.moveTargets = !this.toggles.moveTargets;
-        break;
-      case 'Digit5':
-        this.toggles.aiTargets = !this.toggles.aiTargets;
-        break;
-      case 'Digit6':
-        this.toggles.projectiles = !this.toggles.projectiles;
-        break;
-      default:
-        break;
-    }
+
+    const row = TOGGLE_ROWS.find((r) => e.code === `Digit${r.key}`);
+    if (!row) return;
+    this.toggles[row.field] = !this.toggles[row.field];
+    this.renderPanel();
   };
 
   sync(): void {
@@ -151,7 +164,10 @@ export class DebugOverlay implements GameRenderer {
     }
 
     const stats = this.getStats();
-    this.panel.textContent = this.formatPanel(stats.fps, stats.frameTimeMs);
+    this.refs.fps.textContent = `fps ${stats.fps.toFixed(0)}  frame ${stats.frameTimeMs.toFixed(1)}ms`;
+    this.refs.counts.textContent =
+      `players ${this.world.countLiving(Team.Player)}  enemies ${this.world.countLiving(Team.Enemy)}` +
+      `  snowballs ${this.world.snowballs.length}`;
   }
 
   private drawAiTargets(): void {
@@ -260,28 +276,12 @@ export class DebugOverlay implements GameRenderer {
     this.group.clear();
   }
 
-  private formatPanel(fps: number, frameMs: number): string {
-    const t = this.toggles;
-    const flag = (on: boolean): string => (on ? 'on' : 'off');
-    return [
-      'DEBUG (` to toggle)',
-      `fps ${fps.toFixed(0)}  frame ${frameMs.toFixed(1)}ms`,
-      `players ${this.world.countLiving(Team.Player)}  enemies ${this.world.countLiving(Team.Enemy)}`,
-      `snowballs ${this.world.snowballs.length}`,
-      `[1] collision ${flag(t.collision)}`,
-      `[2] cover ${flag(t.cover)}`,
-      `[3] hitboxes ${flag(t.hitboxes)}`,
-      `[4] moveTargets ${flag(t.moveTargets)}`,
-      `[5] aiTargets ${flag(t.aiTargets)}`,
-      `[6] projectiles ${flag(t.projectiles)}`,
-    ].join('\n');
-  }
-
   dispose(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     this.clearGroup();
     this.scene.remove(this.group);
     for (const mat of Object.values(this.materials)) mat.dispose();
-    this.panel.remove();
+    render(null, this.host);
+    this.host.remove();
   }
 }

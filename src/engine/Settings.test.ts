@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { Settings } from './Settings';
+import { Settings, type ScoreEntry } from './Settings';
 
 class FakeStorage {
   private store = new Map<string, string>();
@@ -35,6 +35,8 @@ describe('Settings', () => {
     expect(s.get('enemyCount')).toBe(3);
     expect(s.get('enemyLives')).toBe(3);
     expect(s.get('playerLives')).toBe(3);
+    expect(s.get('playerName')).toBe('Frosty');
+    expect(s.get('showFps')).toBe(false);
   });
 
   it('persists and clamps enemy count and lives to their ranges', () => {
@@ -109,5 +111,81 @@ describe('Settings', () => {
     const s = new Settings();
     expect(s.get('volume')).toBe(1);
     expect(s.get('difficulty')).toBe('normal');
+  });
+
+  it('sanitizes the player name (trim, cap, blank falls back to default)', () => {
+    const a = new Settings();
+    a.set('playerName', '  Blizzard Bob  ');
+    expect(new Settings().get('playerName')).toBe('Blizzard Bob');
+
+    (globalThis as unknown as { localStorage: FakeStorage }).localStorage.setItem(
+      'snowcraft.save.v1',
+      JSON.stringify({ playerName: '   ' }),
+    );
+    expect(new Settings().get('playerName')).toBe('Frosty');
+
+    (globalThis as unknown as { localStorage: FakeStorage }).localStorage.setItem(
+      'snowcraft.save.v1',
+      JSON.stringify({ playerName: 'x'.repeat(50) }),
+    );
+    expect(new Settings().get('playerName').length).toBe(20);
+  });
+
+  it('records high scores sorted, capped, and returns rank', () => {
+    const s = new Settings();
+    expect(s.get('leaderboard')).toEqual([]);
+    const mk = (score: number): ScoreEntry => ({
+      name: 'Frosty',
+      score,
+      difficulty: 'normal',
+      timeSeconds: 10,
+      livesSpent: 0,
+      map: 'arena1.json',
+      date: 1,
+    });
+    expect(s.addScore(mk(500))).toBe(1);
+    expect(s.addScore(mk(1500))).toBe(1);
+    expect(s.addScore(mk(1000))).toBe(2);
+    expect(s.get('leaderboard').map((e) => e.score)).toEqual([1500, 1000, 500]);
+    // Persisted across instances.
+    expect(new Settings().get('leaderboard').map((e) => e.score)).toEqual([1500, 1000, 500]);
+  });
+
+  it('caps the leaderboard at 10 and reports off-board scores as -1', () => {
+    const s = new Settings();
+    for (let i = 1; i <= 10; i++) {
+      s.addScore({ name: 'Frosty', score: i * 100, difficulty: 'normal', timeSeconds: 10, livesSpent: 0, map: 'm', date: i });
+    }
+    expect(s.get('leaderboard').length).toBe(10);
+    expect(
+      s.addScore({ name: 'Frosty', score: 5, difficulty: 'normal', timeSeconds: 10, livesSpent: 0, map: 'm', date: 11 }),
+    ).toBe(-1);
+    expect(s.get('leaderboard').length).toBe(10);
+  });
+
+  it('clears the leaderboard and drops malformed stored entries', () => {
+    (globalThis as unknown as { localStorage: FakeStorage }).localStorage.setItem(
+      'snowcraft.save.v1',
+      JSON.stringify({
+        leaderboard: [
+          { name: 'Yeti', score: 300, difficulty: 'hard', timeSeconds: 5, livesSpent: 1, map: 'm', date: 2 },
+          { nope: true },
+          42,
+          { score: 'x' },
+        ],
+      }),
+    );
+    const s = new Settings();
+    expect(s.get('leaderboard').length).toBe(1);
+    expect(s.get('leaderboard')[0].score).toBe(300);
+    expect(s.get('leaderboard')[0].name).toBe('Yeti');
+    // A stored entry missing a name falls back to the default.
+    (globalThis as unknown as { localStorage: FakeStorage }).localStorage.setItem(
+      'snowcraft.save.v1',
+      JSON.stringify({ leaderboard: [{ score: 111, difficulty: 'easy', timeSeconds: 3, livesSpent: 0, map: 'm', date: 1 }] }),
+    );
+    expect(new Settings().get('leaderboard')[0].name).toBe('Frosty');
+    s.clearLeaderboard();
+    expect(s.get('leaderboard')).toEqual([]);
   });
 });

@@ -1,0 +1,38 @@
+.panel {
+  background: rgba(10, 16, 32, 0.82);
+  border: 1px solid #22bb44;
+  border-radius: 8px;
+  bottom: 12px;
+  color: #ddffff;
+  display: grid;
+  font: 12px/1.5 ui-monospace, Consolas, monospace;
+  gap: 1px 10px;
+  grid-template-columns: auto auto;
+  left: 12px;
+  padding: 8px 10px;
+  pointer-events: none;
+  position: absolute;
+  z-index: 50;
+}
+
+.title {
+  font-weight: 700;
+  grid-column: 1 / -1;
+  margin-bottom: 2px;
+}
+
+.line {
+  grid-column: 1 / -1;
+}
+
+.toggle {
+  grid-column: 1 / -1;
+}
+
+.on {
+  color: #7dffa0;
+}
+
+.off {
+  color: #7f93a8;
+}

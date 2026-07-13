@@ -29,9 +29,13 @@ export class CameraController {
   private readonly followLerp = 0.14;
   /** How much one wheel notch changes the zoom. */
   private readonly zoomStep = 0.12;
+  /** Per-frame smoothing for the zoom easing (0..1; higher = snappier). */
+  private readonly zoomLerp = 0.18;
 
   /** 0 = min zoom (whole arena), 1 = max zoom (close follow). */
   private zoomT = 0;
+  /** Zoom level the wheel is steering toward; {@link zoomT} eases to meet it. */
+  private zoomTarget = 0;
   private aspect = 1;
   private arena: Arena | null = null;
   private halfW = 10;
@@ -59,11 +63,10 @@ export class CameraController {
     if (this.arena) this.applyFrustum();
   }
 
-  /** Adjusts zoom from a wheel event (scroll up = zoom in). */
+  /** Steers zoom from a wheel event (scroll up = zoom in); eased in {@link update}. */
   zoom(deltaY: number): void {
-    const next = this.zoomT + (deltaY < 0 ? this.zoomStep : -this.zoomStep);
-    this.zoomT = THREE.MathUtils.clamp(next, 0, 1);
-    this.applyFrustum();
+    const next = this.zoomTarget + (deltaY < 0 ? this.zoomStep : -this.zoomStep);
+    this.zoomTarget = THREE.MathUtils.clamp(next, 0, 1);
   }
 
   /**
@@ -71,6 +74,7 @@ export class CameraController {
    * eases back to the arena centre when there is no target. Clamped to the arena.
    */
   update(target: { x: number; y: number } | null): void {
+    this.animateZoom();
     if (target) {
       this.desired.set(target.x, 0, target.y);
     } else {
@@ -81,6 +85,15 @@ export class CameraController {
     this.focus.x += (this.desired.x - this.focus.x) * this.followLerp;
     this.focus.z += (this.desired.z - this.focus.z) * this.followLerp;
     this.applyPosition();
+  }
+
+  /** Eases the applied zoom toward the wheel target, reframing only on change. */
+  private animateZoom(): void {
+    if (this.zoomT === this.zoomTarget) return;
+    const diff = this.zoomTarget - this.zoomT;
+    this.zoomT =
+      Math.abs(diff) < 1e-4 ? this.zoomTarget : this.zoomT + diff * this.zoomLerp;
+    this.applyFrustum();
   }
 
   /** The visible ground rectangle in gameplay coords (for the minimap viewport). */
